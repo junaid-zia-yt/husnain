@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Live Hospital Monitor · PulseWard{% endblock %}
+{% block body %}
+<div class="app-shell">
+    {% include "monitor/sidebar.html" with active="dashboard" %}
+    <main class="main-content">
+        {% include "monitor/topbar.html" with page_title="Live Patient Monitor" %}
+        <section class="page-body dashboard-page" id="monitor-root"
+            data-api-url="{% url 'live-vitals' %}"
+            data-stream-url="{% if sse_enabled %}{% url 'stream-vitals' %}{% endif %}"
+            data-poll-interval="{{ poll_interval_ms }}">
+
+            <section class="monitor-hero">
+                <div class="hero-copy">
+                    <span class="eyebrow">Bedside telemetry · Single patient</span>
+                    <div class="hero-title-row">
+                        <h1>Real Time Vitals Monitoring System</h1>
+                        <span class="live-badge"><i></i> LIVE</span>
+                    </div>
+                    <p>Realtime sensor telemetry streamed from Firebase Realtime Database. The ECG strip plots the actual values received from <code>/{{ firebase_path }}/ECG</code> with no simulated heartbeat waveform.</p>
+                </div>
+                <div class="live-state" id="connection-state">
+                    <i></i>
+                    <span><strong>Connecting</strong><small>Connecting to Firebase</small></span>
+                </div>
+            </section>
+
+            <section class="vital-grid vital-grid--four">
+                <article class="vital-card heart-card" data-vital="bpm">
+                    <div class="vital-card-head">
+                        <span class="metric-icon">♥</span>
+                        <div><span>Heart Rate</span><small>Firebase field: BPM</small></div>
+                        <span class="status-pill status-unknown" data-status="bpm"><i></i>No signal</span>
+                    </div>
+                    <div class="metric-row"><strong data-value="bpm">—</strong><span>BPM</span></div>
+                    <canvas class="sparkline" data-chart="bpm" width="480" height="100"></canvas>
+                    <div class="metric-footer"><span>Reference display</span><strong>60–100 BPM</strong></div>
+                </article>
+
+                <article class="vital-card temperature-card" data-vital="temperature">
+                    <div class="vital-card-head">
+                        <span class="metric-icon">°</span>
+                        <div><span>Temperature</span><small>Firebase field: Temperature</small></div>
+                        <span class="status-pill status-unknown" data-status="temperature"><i></i>No signal</span>
+                    </div>
+                    <div class="metric-row"><strong data-value="temperature">—</strong><span>RAW</span></div>
+                    <canvas class="sparkline" data-chart="temperature" width="480" height="100"></canvas>
+                    <div class="metric-footer"><span>Unit handling</span><strong>Sensor value shown as received</strong></div>
+                </article>
+
+                {% comment %} <article class="vital-card ecg-mini-card" data-vital="ecg">
+                    <div class="vital-card-head">
+                        <span class="metric-icon">∿</span>
+                        <div><span>ECG Signal</span><small>Firebase field: ECG</small></div>
+                        <span class="status-pill status-unknown" data-status="ecg"><i></i>No signal</span>
+                    </div>
+                    <div class="metric-row"><strong data-value="ecg">—</strong><span>RAW</span></div>
+                    <canvas class="sparkline" data-chart="ecg" width="480" height="100"></canvas>
+                    <div class="metric-footer"><span>Waveform</span><strong id="signal-integrity">Awaiting signal</strong></div>
+                </article> {% endcomment %}
+
+                <article class="vital-card timestamp-card" data-vital="sensor_timestamp">
+                    <div class="vital-card-head">
+                        <span class="metric-icon">◷</span>
+                        <div><span>Sensor Timestamp</span><small>Firebase field: Timestamp</small></div>
+                        <span class="status-pill status-unknown" data-status="sensor_timestamp"><i></i>No signal</span>
+                    </div>
+                    <div class="metric-row metric-row--timestamp"><strong data-value="sensor_timestamp">—</strong><span>RAW</span></div>
+                    <div class="timestamp-rail"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                    <div class="metric-footer"><span>Last packet received</span><strong id="last-packet-mini">—</strong></div>
+                </article>
+            </section>
+
+            <section class="dashboard-lower">
+                <article class="monitor-panel ecg-panel" id="ecg-monitor">
+                    <div class="panel-head">
+                        <div><span class="eyebrow">Realtime waveform</span><h2>ECG Signal Monitor</h2></div>
+                        <div class="panel-controls"><span class="lead-chip">RAW ECG · LIVE</span><span class="speed-chip" id="ecg-samples">0 live samples</span></div>
+                    </div>
+                    <div class="ecg-screen">
+                        <div class="ecg-grid"></div>
+                        <canvas id="ecg-chart" width="1280" height="360"></canvas>
+                        <div class="ecg-overlay-left"><span>RAW ECG</span><strong data-value="ecg-large">—</strong><small>Firebase /patient/ECG</small></div>
+                        <div class="ecg-authenticity">NO SIMULATED BEATS</div>
+                        <div class="ecg-axis-labels"><span id="ecg-axis-max">—</span><span id="ecg-axis-mid">—</span><span id="ecg-axis-min">—</span></div>
+                        <div class="ecg-scale"><span>Viewport auto-range</span><span id="ecg-stream-rate">Waiting for samples</span><span>Raw sensor stream</span></div>
+                    </div>
+                    <div class="monitor-stats">
+                        <div><span>Last packet</span><strong id="last-packet">—</strong></div>
+                        <div><span>Data source</span><strong id="data-source">Connecting</strong></div>
+                        <div><span>Live ECG samples</span><strong id="sample-count">0</strong></div>
+                        <div><span>Sensor timestamp</span><strong id="sensor-clock">—</strong></div>
+                    </div>
+                </article>
+
+                <aside class="side-panels">
+                    <article class="monitor-panel source-panel" id="source-details">
+                        <div class="panel-head"><div><span class="eyebrow">Source configuration</span><h2>Firebase Realtime Database</h2></div><span class="firebase-dot">●</span></div>
+                        <dl class="clinical-list">
+                            <div><dt>Database</dt><dd class="mono path-value" title="{{ firebase_database_url }}">{{ firebase_database_url }}</dd></div>
+                            <div><dt>Realtime path</dt><dd class="mono">/{{ firebase_path }}</dd></div>
+                            <div><dt>Mode</dt><dd>{% if sse_enabled %}Django SSE proxy{% else %}REST polling{% endif %}</dd></div>
+                            <div><dt>Patient nodes</dt><dd>1</dd></div>
+                            <div><dt>Expected fields</dt><dd>4</dd></div>
+                        </dl>
+                    </article>
+
+                    <article class="monitor-panel contract-panel">
+                        <div class="panel-head"><div><span class="eyebrow">Exact data contract</span><h2>Live Fields</h2></div></div>
+                        <div class="field-contract">
+                            <div><span class="field-key">BPM</span><strong data-contract-value="bpm">—</strong></div>
+                            <div><span class="field-key">ECG</span><strong data-contract-value="ecg">—</strong></div>
+                            <div><span class="field-key">Temperature</span><strong data-contract-value="temperature">—</strong></div>
+                            <div><span class="field-key">Timestamp</span><strong data-contract-value="sensor_timestamp">—</strong></div>
+                        </div>
+                    </article>
+                </aside>
+            </section>
+
+            <div class="clinical-disclaimer">Monitoring display only. The ECG line contains only real values received from Firebase. It does not generate or fake a normal ECG pattern. The visible waveform quality depends entirely on how frequently your hardware updates /patient/ECG. Recent chart history is stored only in this browser tab and resets on refresh. Temperature and ECG remain raw because their engineering units and calibration are not defined in Firebase.</div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/dashboard.js' %}"></script>{% endblock %}

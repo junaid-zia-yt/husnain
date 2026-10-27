@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-*
+__pycache__/
+*.py[cod]
+staticfiles/
+.venv/
+venv/
+.vercel/
+*.json.key
+*service-account*.json

@@ -1,0 +1,23 @@
+<header class="topbar">
+    <div class="topbar-left">
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">☰</button>
+        <div><span class="breadcrumb">PulseWard / Realtime Telemetry</span><h2>{{ page_title }}</h2></div>
+    </div>
+    <div class="topbar-actions">
+        <div class="hospital-clock"><span id="live-date">—</span><strong id="live-clock">--:--:--</strong></div>
+        <span class="secure-chip">▣ Authenticated session</span>
+    </div>
+</header>
+<script>
+(() => {
+  const tick = () => {
+    const now = new Date();
+    const clock = document.getElementById('live-clock');
+    const date = document.getElementById('live-date');
+    if (clock) clock.textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    if (date) date.textContent = now.toLocaleDateString([], {weekday:'short', day:'2-digit', month:'short'});
+  };
+  tick(); setInterval(tick, 1000);
+  document.getElementById('menu-toggle')?.addEventListener('click', () => document.getElementById('sidebar')?.classList.toggle('open'));
+})();
+</script>

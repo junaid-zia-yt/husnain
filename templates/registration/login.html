@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Secure Login · PulseWard{% endblock %}
+{% block body_class %}login-page{% endblock %}
+{% block body %}
+<main class="login-shell">
+    <section class="login-visual" aria-label="Hospital telemetry illustration">
+        <div class="brand brand--large">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+            <div><strong>PulseWard</strong><small>Hospital Telemetry</small></div>
+        </div>
+        <div class="login-copy">
+            <span class="eyebrow">Secure realtime monitoring</span>
+            <h1>Live sensor data.<br><em>One clinical view.</em></h1>
+            <p>BPM, ECG, temperature and sensor timestamp delivered from Firebase through a protected Django dashboard.</p>
+        </div>
+        <div class="preview-monitor" aria-hidden="true">
+            <div class="preview-head"><span>REALTIME /PATIENT</span><b>LIVE</b></div>
+            <svg viewBox="0 0 720 160" preserveAspectRatio="none">
+                <polyline points="0,95 70,95 85,90 95,105 112,20 130,135 148,78 170,95 260,95 275,88 286,106 302,22 319,135 337,78 360,95 450,95 465,87 476,105 492,20 510,136 527,78 550,95 640,95 655,89 666,105 682,24 700,130 720,90"/>
+            </svg>
+            <div class="preview-numbers"><span><b>71</b> BPM</span><span><b>1895</b> ECG</span><span><b>85</b> TEMP</span><span><b>33695</b> TIME</span></div>
+        </div>
+        <p class="login-security"><span>●</span> Authenticated access · Authorized personnel only</p>
+    </section>
+
+    <section class="login-panel">
+        <div class="login-card">
+            <div class="mobile-brand brand">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+                <div><strong>PulseWard</strong><small>Hospital Telemetry</small></div>
+            </div>
+            <span class="eyebrow">Clinical access portal</span>
+            <h2>Welcome back</h2>
+            <p>Sign in to access the realtime monitoring console.</p>
+            {% if error %}<div class="form-alert">Invalid username or password.</div>{% endif %}
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <label for="id_username">Username</label>
+                <div class="input-wrap"><span aria-hidden="true">◎</span><input type="text" name="username" autocomplete="username" autofocus required id="id_username" placeholder="Enter username"></div>
+                <label for="id_password">Password</label>
+                <div class="input-wrap"><span aria-hidden="true">⌁</span><input type="password" name="password" autocomplete="current-password" required id="id_password" placeholder="Enter password"></div>
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                <button class="btn-primary" type="submit">Open live monitor <span>→</span></button>
+            </form>
+            <p class="login-note">The dashboard is login-protected. Firebase read security must still be configured separately for production use.</p>
+        </div>
+    </section>
+</main>
+{% endblock %}

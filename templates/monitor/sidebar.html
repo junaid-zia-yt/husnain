@@ -1,0 +1,21 @@
+<aside class="sidebar" id="sidebar">
+    <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <div><strong>PulseWard</strong><small>Hospital Telemetry</small></div>
+    </div>
+    <nav class="side-nav" aria-label="Primary navigation">
+        <span class="nav-label">Monitoring</span>
+        <a href="{% url 'dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}"><span>⌁</span> Live monitor</a>
+        <a href="{% url 'dashboard' %}#ecg-monitor"><span>∿</span> ECG waveform</a>
+        <a href="{% url 'dashboard' %}#source-details"><span>◉</span> Firebase status</a>
+    </nav>
+    <div class="sidebar-status">
+        <span class="signal-dot"></span>
+        <div><strong>Realtime service</strong><small>/patient source configured</small></div>
+    </div>
+    <div class="sidebar-user">
+        <span class="avatar">{{ dashboard_username|slice:":1"|upper }}</span>
+        <div><strong>{{ dashboard_username }}</strong><small>Authorized hospital user</small></div>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button title="Sign out" aria-label="Sign out">↗</button></form>
+    </div>
+</aside>
